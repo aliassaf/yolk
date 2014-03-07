@@ -4,11 +4,10 @@ open Declarations
 
 let export_struct_expr_body formatter env struct_expr_body = ()
 
-(** Export the library referred to by [ident].
+(** Export the library referred to by [qualid].
     A libray is a module that corresponds to a file on disk. **)
-let export_library ident =
+let export_qualified_library qualid =
   (* Locate the module associated to the library. *)
-  let qualid = Libnames.qualid_of_ident ident in
   let module_path =
     try Nametab.locate_module qualid with
     | Not_found -> Error.unknown_module qualid
@@ -32,6 +31,10 @@ let export_library ident =
     Format.pp_print_flush formatter ();
     close_out out_channel;
     raise e
+
+let export_library reference =
+  let _, qualid = Libnames.qualid_of_reference reference in
+  export_qualified_library qualid
 
 let export_all () = ()
 
