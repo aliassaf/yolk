@@ -36,5 +36,9 @@ let export_library reference =
   let _, qualid = Libnames.qualid_of_reference reference in
   export_qualified_library qualid
 
-let export_all () = ()
+(** Export all loaded libraries. **)
+let export_all () =
+  let dirpaths = Library.loaded_libraries () in
+  let qualids = List.map Libnames.qualid_of_dirpath dirpaths in
+  List.iter export_qualified_library qualids
 
