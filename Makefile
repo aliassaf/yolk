@@ -27,5 +27,5 @@ clean: $(PLUGIN_MAKEFILE)
 # Use coq_makefile to generate a Makefile for the plugin.
 
 $(PLUGIN_MAKEFILE): Makefile $(SOURCES)
-	$(COQ_MAKEFILE) -R src $(NAME) $(SOURCES) -o $(PLUGIN_MAKEFILE)
+	$(COQ_MAKEFILE) -I src -R src $(NAME) $(SOURCES) -o $(PLUGIN_MAKEFILE)
 
