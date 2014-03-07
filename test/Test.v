@@ -2,5 +2,7 @@
 
 Require Yolk.
 
+Yolk Library Peano.
+
 Yolk All.
 
