@@ -5,6 +5,7 @@ SOURCES = \
 	src/modules.ml \
 	src/libraries.ml \
 	src/commands.ml4 \
+	src/yolk_plugin.mllib \
 	src/Yolk.v
 
 PLUGIN_MAKEFILE = Makefile.plugin
