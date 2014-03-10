@@ -9,7 +9,7 @@ let export_module_body formatter env module_body = ()
 let export_qualified_library qualid =
   let module_path = Nametab.locate_module qualid in
   let module_body = Global.lookup_module module_path in
-  let filename = Names.string_of_mp module_path in
+  let filename = Names.string_of_mp module_path ^ ".ylk" in
   let out_channel = open_out filename in
   let formatter = Format.formatter_of_out_channel out_channel in
   try
