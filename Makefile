@@ -25,6 +25,7 @@ test: plugin
 clean: $(PLUGIN_MAKEFILE)
 	$(MAKE) -f $(PLUGIN_MAKEFILE) clean
 	rm -f $(PLUGIN_MAKEFILE)
+	rm -f test/*.ylk
 
 # Use coq_makefile to generate a Makefile for the plugin.
 
