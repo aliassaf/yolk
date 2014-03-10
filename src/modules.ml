@@ -2,8 +2,39 @@
 
 open Declarations
 
+let export_non_polymorphic_type out env =
+  Format.fprintf out "NonPolymorphicType"
+
+let export_polymorphic_arity out env =
+  Format.fprintf out "PolymorphicArity"
+
+let export_undef out env inline =
+  (* For now assume inline is None. *)
+  assert (inline = None);
+  Format.fprintf out "Axiom"
+
+let export_def out env constr_substituted =
+  Format.fprintf out "@[<2>Def(@,";
+  Format.fprintf out "@,)@]"
+
+let export_opaque_def out env lazy_constr =
+  Format.fprintf out "@[<2>Opaque(@,";
+  Format.fprintf out "@,)@]"
+
 let export_constant_body out env cb =
   Format.fprintf out "@[<2>Constant(@,";
+  (* There should be no section hypotheses at this stage. *)
+  assert (List.length cb.const_hyps = 0);
+  begin match cb.const_type with
+  | NonPolymorphicType(_) -> export_non_polymorphic_type out env
+  | PolymorphicArity(_) -> export_polymorphic_arity out env
+  end;
+  Format.fprintf out ",@ ";
+  begin match cb.const_body with
+  | Undef(inline) -> export_undef out env inline
+  | Def(constr_substituted) -> export_def out env constr_substituted
+  | OpaqueDef(lazy_constr) -> export_opaque_def out env lazy_constr
+  end;
   Format.fprintf out "@,)@]"
 
 
