@@ -23,10 +23,14 @@ let export_undef out env inline =
 
 let export_def out env constr_substituted =
   Format.fprintf out "@[<2>Def(@,";
+  let constr = Declarations.force constr_substituted in
+  Terms.export_constr out env constr;
   Format.fprintf out "@,)@]"
 
 let export_opaque_def out env lazy_constr =
   Format.fprintf out "@[<2>Opaque(@,";
+  let constr = Declarations.force_opaque lazy_constr in
+  Terms.export_constr out env constr;
   Format.fprintf out "@,)@]"
 
 let export_constant_body out env cb =
