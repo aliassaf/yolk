@@ -1,8 +1,6 @@
-(** Main export functions **)
+(** Export of Coq libraries *)
 
 open Declarations
-
-let export_module_body formatter env module_body = ()
 
 (** Export the library referred to by [qualid].
     A libray is a module that corresponds to a file on disk. **)
@@ -13,7 +11,7 @@ let export_qualified_library qualid =
   let out_channel = open_out filename in
   let formatter = Format.formatter_of_out_channel out_channel in
   try
-    export_module_body formatter (Global.env ()) module_body;
+    Modules.export_module_body formatter (Global.env ()) module_body;
     Format.pp_print_flush formatter ();
     close_out out_channel
   with e ->
