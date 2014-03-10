@@ -2,6 +2,15 @@
 
 open Declarations
 
+let export_constant_body out env cb =
+  Format.fprintf out "@[<2>Constant(@,";
+  Format.fprintf out "@,)@]"
+
+
+let export_mutual_inductive_body out env mib =
+  Format.fprintf out "@[<2>Inductive(@,";
+  Format.fprintf out "@,)@]"
+
 (**
   Modules are organised into:
   - module_body (mb):
@@ -37,5 +46,11 @@ and export_structure_body out env sb =
 
 and export_structure_field_body out env (label, sfb) =
   Format.fprintf out "@[<2>(%s,@ " (Names.string_of_label label);
+  begin match sfb with
+  | SFBconst(cb) -> export_constant_body out env cb
+  | SFBmind(mib) -> export_mutual_inductive_body out env mib
+  | SFBmodule(mb) -> export_module_body out env mb
+  | SFBmodtype(_) -> failwith "SFBmodtype not supported"
+  end;
   Format.fprintf out "@,)@];@ "
 
