@@ -15,9 +15,12 @@ open Declarations
   **)
 
 let rec export_module_body out env mb =
-  match mb.mod_expr with
+  Format.fprintf out "@[<2>Module(@,";
+  begin match mb.mod_expr with
   | Some(seb) -> export_struct_expr_body out env seb
   | None -> failwith "Empty module body"
+  end;
+  Format.fprintf out "@,)@]"
 
 and export_struct_expr_body out env seb =
   match seb with
@@ -28,8 +31,11 @@ and export_struct_expr_body out env seb =
   | SEBwith(_) -> failwith "SEBwith not supported"
 
 and export_structure_body out env sb =
-  List.iter (export_structure_field_body out env) sb
+  Format.fprintf out "@[<hv2>Struct([@,";
+  List.iter (export_structure_field_body out env) sb;
+  Format.fprintf out "])@]"
 
 and export_structure_field_body out env (label, sfb) =
-  ()
+  Format.fprintf out "@[<2>(%s,@ " (Names.string_of_label label);
+  Format.fprintf out "@,)@];@ "
 
