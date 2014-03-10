@@ -2,6 +2,14 @@
 
 open Declarations
 
+(**
+  Constant definitions have a type and a body.
+  - The type can be non-polymorphic (normal type) or
+    a polymorphic arity (universe polymorphism).
+  - The body can be empty (an axiom), a normal definition, or
+    an opaque definition (a theorem).
+  *)
+
 let export_non_polymorphic_type out env =
   Format.fprintf out "NonPolymorphicType"
 
