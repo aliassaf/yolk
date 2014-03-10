@@ -1,10 +1,11 @@
 (** Export of Coq libraries *)
 
-open Declarations
+open Pp
 
 (** Export the library referred to by [qualid].
     A libray is a module that corresponds to a file on disk. **)
 let export_qualified_library qualid =
+  Pp.msgnl (str "Exporting " ++ Libnames.pr_qualid qualid);
   let module_path = Nametab.locate_module qualid in
   let module_body = Global.lookup_module module_path in
   let filename = Names.string_of_mp module_path ^ ".ylk" in
