@@ -11,3 +11,4 @@ Makefile.plugin
 *.glob
 *.vo
 *.d
+*.ylk
