@@ -2,6 +2,7 @@ NAME = Yolk
 
 SOURCES = \
 	src/error.ml \
+	src/terms.ml \
 	src/modules.ml \
 	src/libraries.ml \
 	src/commands.ml4 \
