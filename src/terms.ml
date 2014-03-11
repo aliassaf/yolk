@@ -2,8 +2,24 @@
 
 open Term
 
+(**
+  The sorts of the pCIC are either Prop or Type i.
+  The actual implementation is a bit different:
+  - [Prop(Null)] corresponds to Prop
+  - [Prop(Pos)] actually corresponds to Type 0 (probably a remnant
+    of the impredicative Set in the original CIC)
+  - [Type(u)] is an algebraic universe and can even correspond
+    to Prop for some values of [u].
+  **)
+  
 let export_sort env out s =
-  Format.fprintf out "Sort(Type)"
+  Output.open_box out "Sort";
+  begin match s with
+  | Prop(Null) -> Sorts.export_prop env out
+  | Prop(Pos) -> Sorts.export_type0 env out
+  | Type(u) -> Sorts.export_univ env out u
+  end;
+  Output.close_box out ()
 
 (** A constant [c] declared in [env] **)
 let export_constant env out c =
