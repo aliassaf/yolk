@@ -61,7 +61,7 @@ let rec export_constr env out m =
   | Ind(ind) -> export_inductive env out ind
   | Construct(c) -> export_constructor env out c
   | Case(info, p, m, b) -> export_case env out info p m b
-  | Fix(f) -> export_fixpoint env out f
+  | Fix((ks, i), (fs, bs, ms)) -> export_fixpoint env out ks i fs bs ms
   | CoFix(f) -> Error.not_supported "CoFix"
 
 (** The term [forall x : a, b] **)
@@ -128,6 +128,36 @@ and export_case env out info p m b =
   Output.close_list_box out ();
   Output.close_box out ()
 
-and export_fixpoint env out f =
-  Format.fprintf out "Fix"
+(** The term
+    [
+      fix  f_1 : b_1 := m_1
+      with f_2 : b_2 := m_2
+      ...
+      with f_n : b_n := m_n
+      for  f_i
+    ]
+    i.e. the [i]-th function of the bloack of mutual recursive
+    functions with names [fs] and [bs] and bodies [ms] and
+    decreasing argument indices [ks] **)
+and export_fixpoint env out ks i fs bs ms  =
+  let export_index env out k = Format.fprintf out "%d" k in
+  Output.open_box out "Fix";
+  Output.open_list_box out "";
+  Output.sep_list_box out (export_index env) (Array.to_list ks);
+  Output.close_list_box out ();
+  Output.sep_box out ();
+  Format.fprintf out "%d" i;
+  Output.sep_box out ();
+  Output.open_list_box out "";
+  Output.sep_list_box out (export_name env) (Array.to_list fs);
+  Output.close_list_box out ();
+  Output.sep_box out ();
+  Output.open_list_box out "";
+  Output.sep_list_box out (export_constr env) (Array.to_list bs);
+  Output.close_list_box out ();
+  Output.sep_box out ();
+  Output.open_list_box out "";
+  Output.sep_list_box out (export_constr env) (Array.to_list ms);
+  Output.close_list_box out ();
+  Output.close_box out ()
 
