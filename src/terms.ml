@@ -110,9 +110,23 @@ and export_cast env out cast_kind m a =
   export_constr env out a;
   Output.close_box out ()
 
-(** The term [match m as x in I args return p args x with b] **)
+(** The term [match m as x in I args return p args x with b]
+    where p = [fun args x => p args x] **)
 and export_case env out info p m b =
-  Format.fprintf out "Case"
+  let mind, i = info.ci_ind in
+  Output.open_box out "Case"; 
+  Format.fprintf out "%s" (Names.string_of_mind mind);
+  Output.sep_box out ();
+  Format.fprintf out "%d" i;
+  Output.sep_box out ();
+  export_constr env out p;
+  Output.sep_box out ();
+  export_constr env out m;
+  Output.sep_box out ();
+  Output.open_list_box out "";
+  Output.sep_list_box out (export_constr env) (Array.to_list b);
+  Output.close_list_box out ();
+  Output.close_box out ()
 
 and export_fixpoint env out f =
   Format.fprintf out "Fix"
