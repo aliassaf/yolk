@@ -1,4 +1,4 @@
-(** Export of Coq modules *)
+(** Export of Coq modules **)
 
 open Declarations
 
@@ -8,7 +8,7 @@ open Declarations
     a polymorphic arity (universe polymorphism).
   - The body can be empty (an axiom), a normal definition, or
     an opaque definition (a theorem).
-  *)
+  **)
 
 let export_non_polymorphic_type env out =
   Format.fprintf out "NonPolymorphicType"
