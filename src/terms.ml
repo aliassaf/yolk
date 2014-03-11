@@ -111,7 +111,10 @@ and export_cast env out cast_kind m a =
   Output.close_box out ()
 
 (** The term [match m as x in I args return p args x with b]
-    where p = [fun args x => p args x] **)
+    where [p = fun args x => p args x]
+    and [I = info.ci_ind]
+    i.e. the case analysis on the term [m] of inductive type
+    [info.ci_ind] with branches [b] and return type [p] **)
 and export_case env out info p m b =
   let mind, i = info.ci_ind in
   Output.open_box out "Case"; 
