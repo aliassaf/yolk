@@ -2,13 +2,11 @@
 
 open Declarations
 
-(**
-  Constant definitions have a type and a body.
-  - The type can be non-polymorphic (normal type) or
-    a polymorphic arity (universe polymorphism).
-  - The body can be empty (an axiom), a normal definition, or
-    an opaque definition (a theorem).
-  **)
+(** Constant definitions have a type and a body.
+    - The type can be non-polymorphic (normal type) or
+      a polymorphic arity (universe polymorphism).
+    - The body can be empty (an axiom), a normal definition, or
+      an opaque definition (a theorem). **)
 
 let export_non_polymorphic_type env out a =
   Output.open_box out "NonPolymorphicType";
@@ -54,15 +52,13 @@ let export_constant_body env out cb =
 let export_mutual_inductive_body env out mib =
   Format.fprintf out "Inductive"
 
-(**
-  Modules are organised into:
-  - [module_body] (mb): a wrapper around a struct expression
-  - [struct_expr_body] (seb): a struct expression, e.g. functor,
-    application, ...
-  - [structure_body] (sb): a concrete struct, i.e. a list of fields
-  - [structure_field_body] (sfb): a single field declaration, e.g.
-    definition, inductive, ...
-  **)
+(** Modules are organised into:
+    - [module_body] (mb): a wrapper around a struct expression
+    - [struct_expr_body] (seb): a struct expression, e.g. functor,
+      application, ...
+    - [structure_body] (sb): a concrete struct, i.e. a list of fields
+    - [structure_field_body] (sfb): a single field declaration, e.g.
+      definition, inductive, ... **)
 
 let rec export_module_body env out mb =
   Output.open_box out "Module";

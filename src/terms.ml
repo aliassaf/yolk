@@ -2,16 +2,13 @@
 
 open Term
 
-(**
-  The sorts of the pCIC are either Prop or Type i.
-  The actual implementation is a bit different:
-  - [Prop(Null)] corresponds to Prop
-  - [Prop(Pos)] actually corresponds to Type 0 (probably a remnant
-    of the impredicative Set in the original CIC)
-  - [Type(u)] is an algebraic universe and can even correspond
-    to Prop for some values of [u].
-  **)
-  
+(** The sorts of the pCIC are either Prop or Type i.
+    The actual implementation is a bit different:
+    - [Prop(Null)] corresponds to Prop
+    - [Prop(Pos)] actually corresponds to Type 0 (probably a remnant
+      of the impredicative Set in the original CIC)
+    - [Type(u)] is an algebraic universe and can even correspond
+      to Prop for some values of [u]. **)
 let export_sort env out s =
   Output.open_box out "Sort";
   begin match s with
