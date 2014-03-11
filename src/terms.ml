@@ -18,7 +18,7 @@ let export_sort env out s =
   end;
   Output.close_box out ()
 
-(** A constant [c] declared in [env] **)
+(** The constant [c] declared in [env] **)
 let export_constant env out c =
   Format.fprintf out "Const(%s)" (Names.string_of_con c)
 
@@ -39,7 +39,7 @@ let export_name env out x =
   | Names.Name(id) -> Format.fprintf out "%s" (Names.string_of_id id)
   | Names.Anonymous -> Format.fprintf out "_"
 
-(** A local variable represented in de Bruijn index pointing to
+(** The local variable represented in de Bruijn index pointing to
     the [i]-th entry in [env] **)
 let export_rel env out i =
   Format.fprintf out "Rel(%d)" i
@@ -64,7 +64,7 @@ let rec export_constr env out m =
   | Fix(f) -> export_fixpoint env out f
   | CoFix(f) -> Error.not_supported "CoFix"
 
-(** [forall x : a, b] **)
+(** The term [forall x : a, b] **)
 and export_prod env out x a b =
   Output.open_box out "Prod";
   export_name env out x;
@@ -74,7 +74,7 @@ and export_prod env out x a b =
   export_constr (Environ.push_rel (x, None, a) env) out b;
   Output.close_box out ()
 
-(** [fun x : a => m] **)
+(** The term [fun x : a => m] **)
 and export_lam env out x a m =
   Output.open_box out "Lam";
   export_name env out x;
@@ -84,13 +84,13 @@ and export_lam env out x a m =
   export_constr (Environ.push_rel (x, None, a) env) out m;
   Output.close_box out ()
     
-(** [m args] **)
+(** The term [m args] **)
 and export_app env out m args =
   Output.open_list_box out "App";
   Output.sep_list_box out (export_constr env) (m :: Array.to_list args);
   Output.close_list_box out ()
 
-(** [let x : a = n in m] **)
+(** The term [let x : a = n in m] **)
 and export_let_in env out x n a m =
   Output.open_box out "Lam";
   export_name env out x;
@@ -102,7 +102,7 @@ and export_let_in env out x n a m =
   export_constr (Environ.push_rel (x, Some(n), a) env) out m;
   Output.close_box out ()
 
-(** [(m : a)] **)
+(** The term [(m : a)] **)
 and export_cast env out cast_kind m a =
   Output.open_box out "Lam";
   export_constr env out m;
@@ -110,7 +110,7 @@ and export_cast env out cast_kind m a =
   export_constr env out a;
   Output.close_box out ()
 
-(** [match m as x in I args return p args x with b] **)
+(** The term [match m as x in I args return p args x with b] **)
 and export_case env out info p m b =
   Format.fprintf out "Case"
 
