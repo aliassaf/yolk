@@ -3,6 +3,7 @@ NAME = Yolk
 SOURCES = \
 	src/output.ml \
 	src/error.ml \
+	src/sorts.ml \
 	src/terms.ml \
 	src/modules.ml \
 	src/libraries.ml \
