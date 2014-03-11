@@ -10,8 +10,10 @@ open Declarations
     an opaque definition (a theorem).
   **)
 
-let export_non_polymorphic_type env out =
-  Format.fprintf out "NonPolymorphicType"
+let export_non_polymorphic_type env out a =
+  Output.open_box out "NonPolymorphicType";
+  Terms.export_constr env out a;
+  Output.close_box out ()
 
 let export_polymorphic_arity env out =
   Format.fprintf out "PolymorphicArity"
@@ -38,7 +40,7 @@ let export_constant_body env out cb =
   (* There should be no section hypotheses at this stage. *)
   assert (List.length cb.const_hyps = 0);
   begin match cb.const_type with
-  | NonPolymorphicType(_) -> export_non_polymorphic_type env out
+  | NonPolymorphicType(a) -> export_non_polymorphic_type env out a
   | PolymorphicArity(_) -> export_polymorphic_arity env out
   end;
   Output.sep_box out ();
