@@ -56,14 +56,12 @@ let export_mutual_inductive_body env out mib =
 
 (**
   Modules are organised into:
-  - module_body (mb):
-    a wrapper around a struct expression
-  - struct_expr_body (seb):
-    a struct expression, e.g. functors, applications, ...
-  - structure_body (sb):
-    a concrete struct, i.e. a list of fields
-  - structure_field_body (sfb):
-    a single field declaration, e.g. definitions, inductives, ...
+  - [module_body] (mb): a wrapper around a struct expression
+  - [struct_expr_body] (seb): a struct expression, e.g. functor,
+    application, ...
+  - [structure_body] (sb): a concrete struct, i.e. a list of fields
+  - [structure_field_body] (sfb): a single field declaration, e.g.
+    definition, inductive, ...
   **)
 
 let rec export_module_body env out mb =
