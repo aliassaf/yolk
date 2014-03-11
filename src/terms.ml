@@ -117,7 +117,7 @@ and export_cast env out cast_kind m a =
     [info.ci_ind] with branches [b] and return type [p] **)
 and export_case env out info p m b =
   let mind, i = info.ci_ind in
-  Output.open_box out "Case"; 
+  Output.open_box out "Case";
   Format.fprintf out "%s" (Names.string_of_mind mind);
   Output.sep_box out ();
   Format.fprintf out "%d" i;
