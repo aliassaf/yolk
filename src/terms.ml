@@ -1,5 +1,5 @@
 (** Export of Coq terms **)
 
-let rec export_constr out env a =
+let rec export_constr env out a =
   ()
 

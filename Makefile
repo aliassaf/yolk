@@ -1,6 +1,7 @@
 NAME = Yolk
 
 SOURCES = \
+	src/output.ml \
 	src/error.ml \
 	src/terms.ml \
 	src/modules.ml \

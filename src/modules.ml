@@ -10,49 +10,47 @@ open Declarations
     an opaque definition (a theorem).
   *)
 
-let export_non_polymorphic_type out env =
+let export_non_polymorphic_type env out =
   Format.fprintf out "NonPolymorphicType"
 
-let export_polymorphic_arity out env =
+let export_polymorphic_arity env out =
   Format.fprintf out "PolymorphicArity"
 
-let export_undef out env inline =
+let export_undef env out inline =
   (* For now assume inline is None. *)
   assert (inline = None);
   Format.fprintf out "Axiom"
 
-let export_def out env constr_substituted =
-  Format.fprintf out "@[<2>Def(@,";
+let export_def env out constr_substituted =
+  Output.open_box out "Definition";
   let constr = Declarations.force constr_substituted in
-  Terms.export_constr out env constr;
-  Format.fprintf out "@,)@]"
+  Terms.export_constr env out constr;
+  Output.close_box out ()
 
-let export_opaque_def out env lazy_constr =
-  Format.fprintf out "@[<2>Opaque(@,";
+let export_opaque_def env out lazy_constr =
+  Output.open_box out "Opaque";
   let constr = Declarations.force_opaque lazy_constr in
-  Terms.export_constr out env constr;
-  Format.fprintf out "@,)@]"
+  Terms.export_constr env out constr;
+  Output.close_box out ()
 
-let export_constant_body out env cb =
-  Format.fprintf out "@[<2>Constant(@,";
+let export_constant_body env out cb =
+  Output.open_box out "Constant";
   (* There should be no section hypotheses at this stage. *)
   assert (List.length cb.const_hyps = 0);
   begin match cb.const_type with
-  | NonPolymorphicType(_) -> export_non_polymorphic_type out env
-  | PolymorphicArity(_) -> export_polymorphic_arity out env
+  | NonPolymorphicType(_) -> export_non_polymorphic_type env out
+  | PolymorphicArity(_) -> export_polymorphic_arity env out
   end;
-  Format.fprintf out ",@ ";
+  Output.sep_box out ();
   begin match cb.const_body with
-  | Undef(inline) -> export_undef out env inline
-  | Def(constr_substituted) -> export_def out env constr_substituted
-  | OpaqueDef(lazy_constr) -> export_opaque_def out env lazy_constr
+  | Undef(inline) -> export_undef env out inline
+  | Def(constr_substituted) -> export_def env out constr_substituted
+  | OpaqueDef(lazy_constr) -> export_opaque_def env out lazy_constr
   end;
-  Format.fprintf out "@,)@]"
+  Output.close_box out ()
 
-
-let export_mutual_inductive_body out env mib =
-  Format.fprintf out "@[<2>Inductive(@,";
-  Format.fprintf out "@,)@]"
+let export_mutual_inductive_body env out mib =
+  Format.fprintf out "Inductive"
 
 (**
   Modules are organised into:
@@ -66,34 +64,36 @@ let export_mutual_inductive_body out env mib =
     a single field declaration, e.g. definitions, inductives, ...
   **)
 
-let rec export_module_body out env mb =
-  Format.fprintf out "@[<2>Module(@,";
+let rec export_module_body env out mb =
+  Output.open_box out "Module";
   begin match mb.mod_expr with
-  | Some(seb) -> export_struct_expr_body out env seb
+  | Some(seb) -> export_struct_expr_body env out seb
   | None -> failwith "Empty module body"
   end;
-  Format.fprintf out "@,)@]"
+  Output.close_box out ()
 
-and export_struct_expr_body out env seb =
+and export_struct_expr_body env out seb =
   match seb with
   | SEBident(_) -> failwith "SEBident not supported"
   | SEBfunctor(_) -> failwith "SEBfunctor not supported"
   | SEBapply(_) -> failwith "SEBapply not supported"
-  | SEBstruct(sb) -> export_structure_body out env sb
+  | SEBstruct(sb) -> export_structure_body env out sb
   | SEBwith(_) -> failwith "SEBwith not supported"
 
-and export_structure_body out env sb =
-  Format.fprintf out "@[<hv2>Struct([@,";
-  List.iter (export_structure_field_body out env) sb;
-  Format.fprintf out "])@]"
+and export_structure_body env out sb =
+  Output.open_list_box out "Struct";
+  Output.sep_list_box out (export_structure_field_body env) sb;
+  Output.close_list_box out ();
 
-and export_structure_field_body out env (label, sfb) =
-  Format.fprintf out "@[<2>(%s,@ " (Names.string_of_label label);
+and export_structure_field_body env out (label, sfb) =
+  Output.open_box out "";
+  Format.fprintf out "%s" (Names.string_of_label label);
+  Output.sep_box out ();
   begin match sfb with
-  | SFBconst(cb) -> export_constant_body out env cb
-  | SFBmind(mib) -> export_mutual_inductive_body out env mib
-  | SFBmodule(mb) -> export_module_body out env mb
+  | SFBconst(cb) -> export_constant_body env out cb
+  | SFBmind(mib) -> export_mutual_inductive_body env out mib
+  | SFBmodule(mb) -> export_module_body env out mb
   | SFBmodtype(_) -> failwith "SFBmodtype not supported"
   end;
-  Format.fprintf out "@,)@];@ "
+  Output.close_box out ()
 

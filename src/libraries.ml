@@ -12,7 +12,7 @@ let export_qualified_library qualid =
   let out_channel = open_out filename in
   let formatter = Format.formatter_of_out_channel out_channel in
   try
-    Modules.export_module_body formatter (Global.env ()) module_body;
+    Modules.export_module_body (Global.env ()) formatter module_body;
     Format.pp_print_flush formatter ();
     close_out out_channel
   with e ->
