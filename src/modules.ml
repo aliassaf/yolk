@@ -49,8 +49,62 @@ let export_constant_body env out cb =
   end;
   Output.close_box out ()
 
+(** An inductive definition is organised into:
+    - [mutual_inductive_body] : a block of (co)inductive type definitions,
+      containing a context of common parameter and list of [inductive_body]
+    - [inductive_body] : a single inductive type definition,
+      containing a name, an arity, and a list of constructor names and types **)
+
+let export_monomorphic_inductive_arity env out =
+  Format.fprintf out "MonomorphicInductiveArity"
+
+let export_polymorphic_inductive_arity env out =
+  Format.fprintf out "PolymorphicInductiveArity"
+
+let export_constructor env out (c, a) =
+  Output.open_box out "";
+  Format.fprintf out "%s" (Names.string_of_id c);
+  Output.sep_box out ();
+  Terms.export_constr env out a;
+  Output.close_box out ()
+
+let export_inductive_body env out ib =
+  let constructors =
+    List.combine
+      (Array.to_list ib.mind_consnames)
+      (Array.to_list ib.mind_user_lc)
+  in
+  Output.open_box out "";
+  Format.fprintf out "%s" (Names.string_of_id ib.mind_typename);
+  Output.sep_box out ();
+  Terms.export_rel_context env out ib.mind_arity_ctxt;
+  Output.sep_box out ();
+  begin match ib.mind_arity with
+  | Monomorphic(_) -> export_monomorphic_inductive_arity env out
+  | Polymorphic(_) -> export_polymorphic_inductive_arity env out
+  end;
+  Output.sep_box out ();
+  Output.open_list_box out "";
+  Output.sep_list_box out (export_constructor env) constructors;
+  Output.close_list_box out ();
+  Output.close_box out ()
+
 let export_mutual_inductive_body env out mib =
-  Format.fprintf out "Inductive"
+  (* There should be no section hypotheses at this stage. *)
+  assert (List.length mib.mind_hyps = 0);
+  Output.open_box out "Inductive";
+  Format.fprintf out "%B" mib.mind_finite;
+  Output.sep_box out ();
+  Format.fprintf out "%d" mib.mind_nparams;
+  Output.sep_box out ();
+  Format.fprintf out "%d" mib.mind_nparams_rec;
+  Output.sep_box out ();
+  Terms.export_rel_context env out mib.mind_params_ctxt;
+  Output.sep_box out ();
+  Output.open_list_box out "";
+  Output.sep_list_box out (export_inductive_body env) (Array.to_list mib.mind_packets);
+  Output.close_list_box out ();
+  Output.close_box out ()
 
 (** Modules are organised into:
     - [module_body] (mb): a wrapper around a struct expression
