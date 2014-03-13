@@ -191,3 +191,28 @@ and export_cofixpoint env out i fs bs ms  =
   Output.close_list_box out ();
   Output.close_box out ()
 
+(** A local context is a list of triples [(x, m, a)] where:
+    - [x] is the original name of the variable (can be alpha-renamed),
+    - [m] is either [None] (for lambda and product variables) or
+      the definition of the variable (for let in variables),
+    - [a] is the type of the variable. *)
+let export_rel_context env out ctx =
+  let export_entry env out (x, m, a) =
+    Output.open_box out "";
+    export_name env out x;
+    Output.sep_box out ();
+    begin match m with
+    | None -> Format.fprintf out "None";
+    | Some(m) ->
+      Output.open_box out "Some";
+      export_constr env out a;
+      Output.close_box out ()
+    end;
+    Output.sep_box out ();
+    export_constr env out a;
+    Output.close_box out ()
+  in
+  Output.open_list_box out "";
+  Output.sep_list_box out (export_entry env) ctx;
+  Output.close_list_box out ()
+
