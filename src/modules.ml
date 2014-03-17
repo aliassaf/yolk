@@ -32,8 +32,11 @@ let export_monomorphic_constant_type env out a =
   Terms.export_constr env out a;
   Output.close_box out ()
 
-let export_polymorphic_constant_arity env out =
-  Format.fprintf out "PolymorphicConstantArity"
+let export_polymorphic_constant_arity env out ctx s =
+  Output.open_box out "PolymorphicConstantArity";
+  Terms.export_rel_context env out ctx;
+  export_polymorphic_arity env out s;
+  Output.close_box out ()
 
 let export_undef env out inline =
   (* For now assume inline is None. *)
@@ -58,7 +61,7 @@ let export_constant_body env out cb =
   Output.open_box out "Constant";
   begin match cb.const_type with
   | NonPolymorphicType(a) -> export_monomorphic_constant_type env out a
-  | PolymorphicArity(_) -> export_polymorphic_constant_arity env out
+  | PolymorphicArity(ctx, s) -> export_polymorphic_constant_arity env out ctx s
   end;
   Output.sep_box out ();
   begin match cb.const_body with
