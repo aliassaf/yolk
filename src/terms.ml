@@ -14,7 +14,7 @@ let export_sort env out s =
   begin match s with
   | Prop(Null) -> Sorts.export_prop env out
   | Prop(Pos) -> Sorts.export_type0 env out
-  | Type(u) -> Sorts.export_univ env out u
+  | Type(u) -> Sorts.export_universe env out u
   end;
   Output.close_box out ()
 
