@@ -8,6 +8,25 @@ open Declarations
     - The body can be empty (an axiom), a normal definition, or
       an opaque definition (a theorem). **)
 
+
+let export_polymorphic_arity env out a =
+  let export_poly_param out b =
+    match b with
+    | None ->
+      Format.fprintf out "None"
+    | Some(u) ->
+      Output.open_box out "Some";
+      Sorts.export_universe env out u;
+      Output.close_box out ();
+  in
+  Output.open_box out "";
+  Output.open_list_box out "";
+  Output.sep_list_box out export_poly_param a.poly_param_levels;
+  Output.close_list_box out ();
+  Output.sep_box out ();
+  Sorts.export_universe env out a.poly_level;
+  Output.close_box out ()
+
 let export_monomorphic_constant_type env out a =
   Output.open_box out "MonomorphicConstantType";
   Terms.export_constr env out a;
