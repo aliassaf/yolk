@@ -77,11 +77,18 @@ let export_constant_body env out cb =
     - [inductive_body] : a single inductive type definition,
       containing a name, an arity, and a list of constructor names and types **)
 
-let export_monomorphic_inductive_arity env out =
-  Format.fprintf out "MonomorphicInductiveArity"
+let export_monomorphic_inductive_arity env out a ctx =
+  (* User arity should be redundant. *)
+  let arity = Term.it_mkProd_or_LetIn (Term.mkSort a.mind_sort) ctx in
+  assert (arity = a.mind_user_arity);
+  Output.open_box out "MonomorphicInductiveArity";
+  Terms.export_sort env out a.mind_sort;
+  Output.close_box out ()
 
-let export_polymorphic_inductive_arity env out =
-  Format.fprintf out "PolymorphicInductiveArity"
+let export_polymorphic_inductive_arity env out a =
+  Output.open_box out "PolymorphicInductiveArity";
+  export_polymorphic_arity env out a;
+  Output.close_box out ()
 
 let export_constructor env out (c, a) =
   Output.open_box out "";
@@ -102,8 +109,8 @@ let export_inductive_body env out ib =
   Terms.export_rel_context env out ib.mind_arity_ctxt;
   Output.sep_box out ();
   begin match ib.mind_arity with
-  | Monomorphic(_) -> export_monomorphic_inductive_arity env out
-  | Polymorphic(_) -> export_polymorphic_inductive_arity env out
+  | Monomorphic(a) -> export_monomorphic_inductive_arity env out a ib.mind_arity_ctxt
+  | Polymorphic(a) -> export_polymorphic_inductive_arity env out a
   end;
   Output.sep_box out ();
   Output.open_list_box out "";
