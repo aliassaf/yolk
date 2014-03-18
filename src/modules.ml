@@ -150,11 +150,17 @@ let rec export_module_body env out mb =
   end;
   Output.close_box out ()
 
+(** A module type is almost the same thing as a module. **)
+and export_module_type_body env out mtb =
+  Output.open_box out "ModuleType";
+  export_struct_expr_body env out mtb.typ_expr;
+  Output.close_box out ()
+
 and export_struct_expr_body env out seb =
   match seb with
-  | SEBident(_) -> failwith "SEBident not supported"
-  | SEBfunctor(_) -> failwith "SEBfunctor not supported"
-  | SEBapply(_) -> failwith "SEBapply not supported"
+  | SEBident(x) -> export_module_ident env out x
+  | SEBfunctor(x, a, m) -> export_module_functor env out x a m
+  | SEBapply(f, m, _) -> export_module_apply env out f m
   | SEBstruct(sb) -> export_structure_body env out sb
   | SEBwith(_) -> failwith "SEBwith not supported"
 
@@ -171,7 +177,31 @@ and export_structure_field_body env out (label, sfb) =
   | SFBconst(cb) -> export_constant_body env out cb
   | SFBmind(mib) -> export_mutual_inductive_body env out mib
   | SFBmodule(mb) -> export_module_body env out mb
-  | SFBmodtype(_) -> failwith "SFBmodtype not supported"
+  | SFBmodtype(mtb) -> export_module_type_body env out mtb
   end;
   Output.close_box out ()
+
+(** The functor with module parameter [x] of module type [a]
+    and body [m] **)
+and export_module_functor env out x a m =
+  Output.open_box out "ModuleFunctor";
+  Format.fprintf out "%s" (Names.string_of_mbid x);
+  Output.sep_box out ();
+  export_module_type_body env out a;
+  Output.sep_box out ();
+  export_struct_expr_body env out m;
+  Output.close_box out ()
+
+(** The application of the functor [f] to the module [m] **)
+and export_module_apply env out f m =
+  Output.open_box out "ModduleApply";
+  export_struct_expr_body env out f;
+  Output.sep_box out ();
+  export_struct_expr_body env out m;
+  Output.close_box out ()
+
+(** The name of a module can be introduced by a functor or
+    correspond to a loaded library. **)
+and export_module_ident env out x =
+  Format.fprintf out "%s" (Names.string_of_mp x)
 
