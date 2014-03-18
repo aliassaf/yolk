@@ -163,7 +163,7 @@ and export_struct_expr_body env out seb =
   | SEBfunctor(x, a, m) -> export_module_functor env out x a m
   | SEBapply(f, m, _) -> export_module_apply env out f m
   | SEBstruct(sb) -> export_structure_body env out sb
-  | SEBwith(_) -> failwith "SEBwith not supported"
+  | SEBwith(_) -> Error.not_supported "SEBwith"
 
 and export_structure_body env out sb =
   Output.open_list_box out "Struct";
