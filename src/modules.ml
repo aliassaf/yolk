@@ -8,7 +8,6 @@ open Declarations
     - The body can be empty (an axiom), a normal definition, or
       an opaque definition (a theorem). **)
 
-
 let export_polymorphic_arity env out a =
   let export_poly_param out b =
     match b with
