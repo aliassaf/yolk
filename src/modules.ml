@@ -78,7 +78,9 @@ let export_constant_body env out cb =
 let export_monomorphic_inductive_arity env out a ctx =
   (* User arity should be redundant. *)
   let arity = Term.it_mkProd_or_LetIn (Term.mkSort a.mind_sort) ctx in
-  assert (arity = a.mind_user_arity);
+  begin try ignore(Reduction.conv env arity a.mind_user_arity) with
+  | _ -> Error.error (Pp.str "Inductive type user arity mismatch")
+  end;
   Output.open_box out "MonomorphicInductiveArity";
   Terms.export_sort env out a.mind_sort;
   Output.close_box out ()
