@@ -38,8 +38,7 @@ let export_polymorphic_constant_arity env out ctx s =
   Output.close_box out ()
 
 let export_undef env out inline =
-  (* For now assume inline is None. *)
-  assert (inline = None);
+  (* For now ignore inline *)
   Format.fprintf out "Axiom"
 
 let export_def env out constr_substituted =
