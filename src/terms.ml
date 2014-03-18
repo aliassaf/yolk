@@ -92,7 +92,7 @@ and export_app env out m args =
 
 (** The term [let x : a = n in m] **)
 and export_let_in env out x n a m =
-  Output.open_box out "Lam";
+  Output.open_box out "LetIn";
   export_name env out x;
   Output.sep_box out ();
   export_constr env out n;
@@ -104,7 +104,7 @@ and export_let_in env out x n a m =
 
 (** The term [(m : a)] **)
 and export_cast env out cast_kind m a =
-  Output.open_box out "Lam";
+  Output.open_box out "Cast";
   export_constr env out m;
   Output.sep_box out ();
   export_constr env out a;
