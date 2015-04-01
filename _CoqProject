@@ -1,0 +1,11 @@
+ -I src -R src Yolk
+OCAMLLIBS = "-I src $(shell ocamlfind query -i-format easy-format yojson)"
+COQLIBS = "-R src Yolk $(shell ocamlfind query -i-format easy-format yojson)"
+src/backend.ml
+src/error.ml
+src/sorts.ml
+src/terms.ml
+src/modules.ml
+src/commands.ml4
+src/yolk_plugin.mllib
+src/Yolk.v
