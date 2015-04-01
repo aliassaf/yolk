@@ -1,6 +1,7 @@
 (** Export of Coq modules **)
 
-open Declarations
+module B = Backend
+module D = Declarations
 
 (** Constant definitions have a type and a body.
     - The type can be non-polymorphic (normal type) or
@@ -8,66 +9,46 @@ open Declarations
     - The body can be empty (an axiom), a normal definition, or
       an opaque definition (a theorem). **)
 
-let export_polymorphic_arity env out a =
-  let export_poly_param out b =
+let polymorphic_arity env a =
+  let poly_param b =
     match b with
-    | None ->
-      Format.fprintf out "None"
-    | Some(u) ->
-      Output.open_box out "Some";
-      Sorts.export_universe env out u;
-      Output.close_box out ();
+    | None -> B.variant "None" []
+    | Some(u) -> B.variant "Some" [Sorts.universe env u]
   in
-  Output.open_box out "";
-  Output.open_list_box out "";
-  Output.sep_list_box out export_poly_param a.poly_param_levels;
-  Output.close_list_box out ();
-  Output.sep_box out ();
-  Sorts.export_universe env out a.poly_level;
-  Output.close_box out ()
+  B.Record [
+    "param_levels", B.List (List.map poly_param a.D.poly_param_levels);
+    "level", Sorts.universe env a.D.poly_level;
+    ]
 
-let export_monomorphic_constant_type env out a =
-  Output.open_box out "MonomorphicConstantType";
-  Terms.export_constr env out a;
-  Output.close_box out ()
+let constant_type env ct =
+  match ct with
+  | D.NonPolymorphicType a ->
+    B.variant "NonPolymorphicType" [Terms.constr env a]
+  | D.PolymorphicArity (ctx, pa) ->
+    B.variant "PolymorphicArity" [
+      Terms.rel_context env ctx;
+      polymorphic_arity env pa;
+      ]
 
-let export_polymorphic_constant_arity env out ctx s =
-  Output.open_box out "PolymorphicConstantArity";
-  Terms.export_rel_context env out ctx;
-  export_polymorphic_arity env out s;
-  Output.close_box out ()
+let constant_def env cd =
+  match cd with
+  | D.Undef _ ->
+    B.variant "Undef" []
+  | D.Def cs ->
+    let m = Declarations.force cs in
+    B.variant "Def" [Terms.constr env m]
+  | D.OpaqueDef lc ->
+    let m = Declarations.force_opaque lc in
+    B.variant "OpaqueDef" [Terms.constr env m]
 
-let export_undef env out inline =
-  (* For now ignore inline *)
-  Format.fprintf out "Axiom"
-
-let export_def env out constr_substituted =
-  Output.open_box out "Definition";
-  let constr = Declarations.force constr_substituted in
-  Terms.export_constr env out constr;
-  Output.close_box out ()
-
-let export_opaque_def env out lazy_constr =
-  Output.open_box out "Opaque";
-  let constr = Declarations.force_opaque lazy_constr in
-  Terms.export_constr env out constr;
-  Output.close_box out ()
-
-let export_constant_body env out cb =
+let constant_body env cb =
   (* There should be no section hypotheses at this stage. *)
-  assert (List.length cb.const_hyps = 0);
-  Output.open_box out "Constant";
-  begin match cb.const_type with
-  | NonPolymorphicType(a) -> export_monomorphic_constant_type env out a
-  | PolymorphicArity(ctx, s) -> export_polymorphic_constant_arity env out ctx s
-  end;
-  Output.sep_box out ();
-  begin match cb.const_body with
-  | Undef(inline) -> export_undef env out inline
-  | Def(constr_substituted) -> export_def env out constr_substituted
-  | OpaqueDef(lazy_constr) -> export_opaque_def env out lazy_constr
-  end;
-  Output.close_box out ()
+  assert (List.length cb.D.const_hyps = 0);
+  assert (Univ.is_empty_constraint cb.D.const_constraints);
+  B.Record [
+    "type", constant_type env cb.D.const_type;
+    "body", constant_def env cb.D.const_body;
+    ]
 
 (** An inductive definition is organised into:
     - [mutual_inductive_body] : a block of (co)inductive type definitions,
@@ -75,65 +56,41 @@ let export_constant_body env out cb =
     - [inductive_body] : a single inductive type definition,
       containing a name, an arity, and a list of constructor names and types **)
 
-let export_monomorphic_inductive_arity env out a ctx =
-  (* User arity should be redundant. *)
-  let arity = Term.it_mkProd_or_LetIn (Term.mkSort a.mind_sort) ctx in
-  begin try ignore(Reduction.conv env arity a.mind_user_arity) with
-  | _ -> Error.error (Pp.str "Inductive type user arity mismatch")
-  end;
-  Output.open_box out "MonomorphicInductiveArity";
-  Terms.export_sort env out a.mind_sort;
-  Output.close_box out ()
+let monomorphic_inductive_arity env mia =
+  B.Record [
+    "user_arity", Terms.constr env mia.D.mind_user_arity;
+    "sort", Terms.sorts env mia.D.mind_sort;
+    ]
 
-let export_polymorphic_inductive_arity env out a =
-  Output.open_box out "PolymorphicInductiveArity";
-  export_polymorphic_arity env out a;
-  Output.close_box out ()
+let inductive_arity env ia =
+  match ia with
+  | D.Monomorphic mia ->
+    B.variant "Monomorphic" [monomorphic_inductive_arity env mia]
+  | D.Polymorphic pa ->
+    B.variant "Polymorphic" [polymorphic_arity env pa]
 
-let export_constructor env out (c, a) =
-  Output.open_box out "";
-  Format.fprintf out "%s" (Names.string_of_id c);
-  Output.sep_box out ();
-  Terms.export_constr env out a;
-  Output.close_box out ()
+let one_inductive_body env ib =
+  B.Record [
+    "typename", B.String (Names.string_of_id ib.D.mind_typename);
+    "arity_ctxt", Terms.rel_context env ib.D.mind_arity_ctxt;
+    "arity", inductive_arity env ib.D.mind_arity;
+    "consnames", B.List (List.map (fun id -> B.String (Names.string_of_id id)) (Array.to_list ib.D.mind_consnames));
+    "user_lc", B.List (List.map (Terms.constr env) (Array.to_list ib.D.mind_user_lc));
+    ]
 
-let export_inductive_body env out ib =
-  let constructors =
-    List.combine
-      (Array.to_list ib.mind_consnames)
-      (Array.to_list ib.mind_user_lc)
-  in
-  Output.open_box out "";
-  Format.fprintf out "%s" (Names.string_of_id ib.mind_typename);
-  Output.sep_box out ();
-  Terms.export_rel_context env out ib.mind_arity_ctxt;
-  Output.sep_box out ();
-  begin match ib.mind_arity with
-  | Monomorphic(a) -> export_monomorphic_inductive_arity env out a ib.mind_arity_ctxt
-  | Polymorphic(a) -> export_polymorphic_inductive_arity env out a
-  end;
-  Output.sep_box out ();
-  Output.open_list_box out "";
-  Output.sep_list_box out (export_constructor env) constructors;
-  Output.close_list_box out ();
-  Output.close_box out ()
-
-let export_mutual_inductive_body env out mib =
+let mutual_inductive_body env mib =
   (* There should be no section hypotheses at this stage. *)
-  assert (List.length mib.mind_hyps = 0);
-  Output.open_box out "Inductive";
-  Format.fprintf out "%B" mib.mind_finite;
-  Output.sep_box out ();
-  Format.fprintf out "%d" mib.mind_nparams;
-  Output.sep_box out ();
-  Format.fprintf out "%d" mib.mind_nparams_rec;
-  Output.sep_box out ();
-  Terms.export_rel_context env out mib.mind_params_ctxt;
-  Output.sep_box out ();
-  Output.open_list_box out "";
-  Output.sep_list_box out (export_inductive_body env) (Array.to_list mib.mind_packets);
-  Output.close_list_box out ();
-  Output.close_box out ()
+  assert (List.length mib.D.mind_hyps = 0);
+  assert (Univ.is_empty_constraint mib.D.mind_constraints);
+  B.Record [
+    "finite", B.Bool mib.D.mind_finite;
+    "record", B.Bool mib.D.mind_record;
+    "ntypes", B.Int mib.D.mind_ntypes;
+    "nparams", B.Int mib.D.mind_nparams;
+    "nparams_rec", B.Int mib.D.mind_nparams_rec;
+    "params_ctxt", Terms.rel_context env mib.D.mind_params_ctxt;
+    "packets", B.List (List.map (one_inductive_body env) (Array.to_list mib.D.mind_packets));
+    ]
 
 (** Modules are organised into:
     - [module_body] (mb): a wrapper around a struct expression
@@ -143,66 +100,40 @@ let export_mutual_inductive_body env out mib =
     - [structure_field_body] (sfb): a single field declaration, e.g.
       definition, inductive, ... **)
 
-let rec export_module_body env out mb =
-  Output.open_box out "Module";
-  begin match mb.mod_expr with
-  | Some(seb) -> export_struct_expr_body env out seb
-  | None -> failwith "Empty module body"
-  end;
-  Output.close_box out ()
+let rec module_body env mb =
+  assert (Univ.is_empty_constraint mb.D.mod_constraints);
+  B.Record [
+    "mp", B.String (Names.string_of_mp mb.D.mod_mp);
+    "expr",
+      begin match mb.D.mod_expr with
+      | Some(seb) -> struct_expr_body env seb
+      | None -> failwith "Empty module body"
+      end;
+    ]
 
-(** A module type is almost the same thing as a module. **)
-and export_module_type_body env out mtb =
-  Output.open_box out "ModuleType";
-  export_struct_expr_body env out mtb.typ_expr;
-  Output.close_box out ()
-
-and export_struct_expr_body env out seb =
+and struct_expr_body env seb =
   match seb with
-  | SEBident(x) -> export_module_ident env out x
-  | SEBfunctor(x, a, m) -> export_module_functor env out x a m
-  | SEBapply(f, m, _) -> export_module_apply env out f m
-  | SEBstruct(sb) -> export_structure_body env out sb
-  | SEBwith(_) -> Error.not_supported "SEBwith"
+  | D.SEBident _ -> Error.not_supported "SEBident"
+  | D.SEBfunctor _ -> Error.not_supported "SEBfunctor"
+  | D.SEBapply _ -> Error.not_supported "SEBapply"
+  | D.SEBstruct sb ->
+    B.variant "SEBstruct" [
+      structure_body env sb
+    ]
+  | D.SEBwith(_) -> Error.not_supported "SEBwith"
 
-and export_structure_body env out sb =
-  Output.open_list_box out "Struct";
-  Output.sep_list_box out (export_structure_field_body env) sb;
-  Output.close_list_box out ();
+and structure_body env sb =
+  let structure_body_entry (lbl, body) =
+    B.Tuple [B.String (Names.string_of_label lbl); structure_field_body env body]
+  in
+  B.List (List.map structure_body_entry sb)
 
-and export_structure_field_body env out (label, sfb) =
-  Output.open_box out "";
-  Format.fprintf out "%s" (Names.string_of_label label);
-  Output.sep_box out ();
-  begin match sfb with
-  | SFBconst(cb) -> export_constant_body env out cb
-  | SFBmind(mib) -> export_mutual_inductive_body env out mib
-  | SFBmodule(mb) -> export_module_body env out mb
-  | SFBmodtype(mtb) -> export_module_type_body env out mtb
-  end;
-  Output.close_box out ()
-
-(** The functor with module parameter [x] of module type [a]
-    and body [m] **)
-and export_module_functor env out x a m =
-  Output.open_box out "ModuleFunctor";
-  Format.fprintf out "%s" (Names.string_of_mbid x);
-  Output.sep_box out ();
-  export_module_type_body env out a;
-  Output.sep_box out ();
-  export_struct_expr_body env out m;
-  Output.close_box out ()
-
-(** The application of the functor [f] to the module [m] **)
-and export_module_apply env out f m =
-  Output.open_box out "ModduleApply";
-  export_struct_expr_body env out f;
-  Output.sep_box out ();
-  export_struct_expr_body env out m;
-  Output.close_box out ()
-
-(** The name of a module can be introduced by a functor or
-    correspond to a loaded library. **)
-and export_module_ident env out x =
-  Format.fprintf out "%s" (Names.string_of_mp x)
-
+and structure_field_body env sfb =
+  match sfb with
+  | D.SFBconst(cb) ->
+    B.variant "SFBconst" [constant_body env cb]
+  | D.SFBmind(mib) ->
+    B.variant "SFBmind" [mutual_inductive_body env mib]
+  | D.SFBmodule(mb) ->
+    B.variant "SFBmodule" [module_body env mb]
+  | D.SFBmodtype _ -> Error.not_supported "SFBmodtype"
